@@ -13,6 +13,7 @@ lib-cov
 coverage
 
 node_modules/
+uploads/
 
 .npm
 
