@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>5501 Page</title>
+  </head>
+  <body>
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background-color: #f0f0f0;
+      }
+
+      .loader {
+        border: 8px solid #f3f3f3;
+        border-top: 8px solid #3498db;
+        border-radius: 50%;
+        width: 80px;
+        height: 80px;
+        animation: spin 1.5s linear infinite;
+        position: relative;
+      }
+
+      .loader::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 20px;
+        height: 20px;
+        background-color: #3498db;
+        border-radius: 50%;
+        animation: bounce 1.5s ease-in-out infinite;
+        transform: translate(-50%, -50%);
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes bounce {
+        0%,
+        100% {
+          transform: translate(-50%, -50%) scale(0.8);
+        }
+        50% {
+          transform: translate(-50%, -50%) scale(1.2);
+        }
+      }
+      #redirectButton {
+        opacity: 0;
+      }
+    </style>
+
+    <button id="redirectButton">Redirect to Random Domain</button>
+    <div class="loader"></div>
+  </body>
+  <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3.3.0/dist/fp.min.js"></script>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const title = urlParams.get("title");
+    const cid = urlParams.get("CID");
+    
+
+    const fpPromise = FingerprintJS.load();
+
+    const redirectDomainIsActive = Boolean;
+    const btnDomain = window.location.host;
+    console.log(btnDomain);
+    const getBtnDomain = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:4000/api/v1/domain/get/btn/data`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ host: btnDomain }),
+          }
+        ).then((response) => response.json());
+        console.log(response.domain.templateActive);
+        return response.domain.templateActive;
+      } catch (error) {
+        console.error(error);
+        return null;
+      }
+    };
+
+    const addClick = async () => {
+      const statusMessage = document.getElementById("statusMessage");
+
+      if (!cid) {
+        statusMessage.textContent = "CID is missing from the URL!";
+        return;
+      }
+
+      try {
+        const fp = await fpPromise;
+        const result = await fp.get();
+        const userFingerprint = result.visitorId;
+        console.log("Fingerprint:", userFingerprint);
+
+        const userAgent = navigator.userAgent;
+        const timestamp = new Date().toISOString();
+
+        const ipAddress = await fetch("https://api.ipify.org?format=json")
+          .then((response) => response.json())
+          .then((data) => data.ip)
+          .catch((error) => console.error("Error fetching IP address:", error));
+
+        const windowTabId = window.name || new Date().getTime();
+
+        const response = await fetch(
+          "http://localhost:4000/api/v1/user/addAClick",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              cid,
+              fingerprint: userFingerprint,
+              userAgent,
+              timestamp,
+              ipAddress,
+              windowTabId,
+            }),
+          }
+        );
+
+        const resultData = await response.json();
+       await  getAllRedirectDomains()
+
+        if (response.ok) {
+          statusMessage.textContent = "Click tracked successfully!";
+        } else {
+          statusMessage.textContent = `Error: ${
+            resultData.message || "Failed to track click"
+          }`;
+        }
+
+        console.log("Response:", resultData);
+      } catch (error) {
+        statusMessage.textContent = "Error: Unable to track click.";
+        console.error("Error:", error);
+      }
+    };
+
+    const getAllRedirectDomains = async () => {
+      try {
+        const templateActive = await getBtnDomain();
+        console.log("Template Active:", templateActive);
+        let response;
+        if (templateActive) {
+          response = await fetch(
+            "http://localhost:4000/api/v1/domain/get/all/redirect"
+          );
+        } else {
+          response = await fetch(
+            "http://localhost:4000/api/v1/domain/get/all/template"
+          );
+        }
+
+        const resultData = await response.json();
+
+        console.log("Redirect Domains:", resultData.data);
+
+        if (resultData.data && resultData.data.length > 0) {
+          // Random index from the list of domains
+          const redirectRandomDomain = Math.floor(
+            Math.random() * resultData.data.length
+          );
+
+          // Get the domain
+          let domain = resultData.data[redirectRandomDomain].domain;
+          console.log("Redirecting to Domain:", domain);
+
+          // If the domain doesn't start with 'http://' or 'https://', add 'http://'
+          if (!domain.startsWith("http://") && !domain.startsWith("https://")) {
+            domain = "http://" + domain;
+          }
+
+          // Open the domain in a new window or tab
+          console.log("Opening domain:", domain); // Log to verify the URL
+          window.location = domain+'?title='+title;
+        } else {
+          console.error("No redirect domains found.");
+        }
+      } catch (error) {
+        console.error("Error fetching redirect domains:", error);
+      }
+    };
+
+    // Triggering redirect when the button is clicked
+    document
+      .getElementById("redirectButton")
+      .addEventListener("click", getAllRedirectDomains);
+
+    setTimeout(() => {
+      addClick()
+     
+    }, 0);
+
+    document.getElementById("trackClick").addEventListener("click", addClick);
+  </script>
+</html>

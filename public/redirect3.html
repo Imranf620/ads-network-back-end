@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Download Redirect - Page 3</title>
+    <style>
+      body {
+        font-family: "Tahoma", sans-serif;
+        background-color: #f0f4f8;
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        color: #333;
+        background: linear-gradient(120deg, #ff7e5f, #feb47b);
+      }
+
+      .container {
+        background-color: #ffffff;
+        padding: 40px;
+        border-radius: 20px;
+        text-align: center;
+        box-shadow: 0px 8px 35px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 400px;
+      }
+
+      h2 {
+        font-size: 30px;
+        color: #333333;
+        font-weight: 600;
+        margin-bottom: 25px;
+      }
+
+      p {
+        font-size: 16px;
+        color: #555555;
+        margin-bottom: 40px;
+        line-height: 1.5;
+      }
+
+      .button {
+        background-color: #ff5722;
+        color: white;
+        padding: 20px 50px;
+        font-size: 18px;
+        border-radius: 50px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+        max-width: 250px;
+        margin: 0 auto;
+      }
+
+      .button:hover {
+        background-color: #e64a19;
+        transform: translateY(-5px);
+      }
+
+      .button:active {
+        transform: translateY(2px);
+      }
+
+      .footer {
+        font-size: 14px;
+        color: #777;
+        margin-top: 30px;
+      }
+
+      .footer a {
+        color: #ff5722;
+        text-decoration: none;
+      }
+
+      .footer a:hover {
+        text-decoration: underline;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .container {
+          padding: 25px;
+          width: 90%;
+        }
+
+        h2 {
+          font-size: 24px;
+        }
+
+        p {
+          font-size: 14px;
+        }
+
+        .button {
+          font-size: 16px;
+          padding: 15px 40px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Your Download is Ready</h2>
+      <p>
+        We are redirecting you to your selected domain. The download process
+        will start shortly. If you encounter any issues, please try again.
+      </p>
+      <button id="downloadButton" class="button">Proceed to Domain</button>
+
+      <p class="footer">
+        By clicking the button, you accept our
+        <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+      </p>
+    </div>
+
+    <script>
+      const urlParams = new URLSearchParams(window.location.search);
+      const title = urlParams.get("title");
+
+      
+      async function getAllTemplateDomains() {
+        try {
+          const response = await fetch(
+            "http://localhost:4000/api/v1/domain/get/all/template"
+          );
+          const data = await response.json();
+          return data.data;
+        } catch (error) {
+          console.error("Error fetching domains:", error);
+          return [];
+        }
+      }
+
+      async function setDownloadLink() {
+        const templateDomains = await getAllTemplateDomains();
+        if (templateDomains.length > 0) {
+          const randomDomain =
+            templateDomains[Math.floor(Math.random() * templateDomains.length)]
+              .domain;
+          window.location.href = randomDomain + "?title=" + title;
+        } else {
+          console.error("No template domains found.");
+        }
+      }
+
+      document
+        .getElementById("downloadButton")
+        .addEventListener("click", setDownloadLink);
+    </script>
+  </body>
+</html>

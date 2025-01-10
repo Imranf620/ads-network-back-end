@@ -23,8 +23,14 @@ const domainSchema = new mongoose.Schema({
     referenceTo:{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Domain",
+    },
+    templateActive:{
+        type: Boolean,
+        default: true,
     }
 
+},{
+    timestamps: true,
 })
 
 export default mongoose.model("Domain", domainSchema)

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>File Download Link</title>
+    <style>
+      body {
+        font-family: "Roboto", sans-serif;
+        background: linear-gradient(
+          135deg,
+          #6f42c1,
+          #ff7e5f
+        ); /* Gradient background */
+        color: #333;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        overflow: hidden;
+      }
+
+      .container {
+        background-color: rgba(
+          255,
+          255,
+          255,
+          0.9
+        ); /* Light opacity background */
+        border-radius: 15px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+        padding: 40px 30px;
+        text-align: center;
+        width: 380px;
+        animation: fadeIn 1s ease-out;
+        backdrop-filter: blur(10px); /* Slight blur for smooth effect */
+      }
+
+      h2 {
+        color: #0d6efd;
+        margin-bottom: 20px;
+        font-size: 28px;
+        font-weight: bold;
+      }
+
+      p {
+        font-size: 16px;
+        margin-bottom: 30px;
+        color: #6c757d;
+      }
+
+      .link-container {
+        margin-bottom: 20px;
+      }
+
+      .file-link {
+        font-size: 14px;
+        color: #0d6efd;
+        word-wrap: break-word;
+        margin: 10px 0;
+        display: block;
+        text-align: center;
+        transition: color 0.3s;
+      }
+
+      .file-link:hover {
+        color: #0056b3;
+        text-decoration: underline;
+      }
+
+      .copy-btn {
+        background-color: #0d6efd;
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 18px;
+        transition: transform 0.3s ease, background-color 0.3s;
+        margin-top: 20px;
+      }
+
+      .copy-btn:hover {
+        background-color: #0056b3;
+        transform: scale(1.1);
+      }
+
+      .copy-btn:active {
+        transform: scale(0.98);
+      }
+
+      .message {
+        color: #28a745;
+        font-weight: bold;
+        display: none;
+        margin-top: 15px;
+      }
+
+      .svg-icon {
+        width: 24px;
+        height: 24px;
+        fill: white;
+        margin-left: 10px;
+        transition: transform 0.3s;
+      }
+
+      .copy-btn:hover .svg-icon {
+        transform: translateX(5px);
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .container {
+          width: 90%;
+          padding: 40px 20px;
+        }
+
+        h2 {
+          font-size: 22px;
+        }
+
+        .copy-btn {
+          font-size: 16px;
+          padding: 10px 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+        <h1 id="header">
+
+        </h1>
+      <h2>Download Your File</h2>
+      <p>
+        Click the button below to get the link to download your file directly.
+      </p>
+
+      <div class="link-container">
+        <text id="fileLink" class="file-link"  target="_blank"
+          >Fetching download link...</text
+        >
+      </div>
+
+      <h3>
+        <span id="password" class="password"></span>
+      </h3>
+
+      <button class="copy-btn" onclick="copyLink()">
+        Copy Download Link
+        <!-- SVG Icon for Copy -->
+        <svg
+          class="svg-icon"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 115.77 122.88"
+        >
+          <path
+            class="st0"
+            d="M89.62,13.96v7.73h12.19h0.01v0.02c3.85,0.01,7.34,1.57,9.86,4.1c2.5,2.51,4.06,5.98,4.07,9.82h0.02v0.02 v73.27v0.01h-0.02c-0.01,3.84-1.57,7.33-4.1,9.86c-2.51,2.5-5.98,4.06-9.82,4.07v0.02h-0.02h-61.7H40.1v-0.02 c-3.84-0.01-7.34-1.57-9.86-4.1c-2.5-2.51-4.06-5.98-4.07-9.82h-0.02v-0.02V92.51H13.96h-0.01v-0.02c-3.84-0.01-7.34-1.57-9.86-4.1 c-2.5-2.51-4.06-5.98-4.07-9.82H0v-0.02V13.96v-0.01h0.02c0.01-3.85,1.58-7.34,4.1-9.86c2.51-2.5,5.98-4.06,9.82-4.07V0h0.02h61.7 h0.01v0.02c3.85,0.01,7.34,1.57,9.86,4.1c2.5,2.51,4.06,5.98,4.07,9.82h0.02V13.96L89.62,13.96z M79.04,21.69v-7.73v-0.02h0.02 c0-0.91-0.39-1.75-1.01-2.37c-0.61-0.61-1.46-1-2.37-1v0.02h-0.01h-61.7h-0.02v-0.02c-0.91,0-1.75,0.39-2.37,1.01 c-0.61,0.61-1,1.46-1,2.37h0.02v0.01v64.59v0.02h-0.02c0,0.91,0.39,1.75,1.01,2.37c0.61,0.61,1.46,1,2.37,1v-0.02h0.01h12.19V35.65 v-0.01h0.02c0.01-3.85,1.58-7.34,4.1-9.86c2.51-2.5,5.98-4.06,9.82-4.07v-0.02h0.02H79.04L79.04,21.69z M105.18,108.92V35.65v-0.02 h0.02c0-0.91-0.39-1.75-1.01-2.37c-0.61-0.61-1.46-1-2.37-1v0.02h-0.01h-61.7h-0.02v-0.02c-0.91,0-1.75,0.39-2.37,1.01 c-0.61,0.61-1,1.46-1,2.37h0.02v0.01v73.27v0.02h-0.02c0,0.91,0.39,1.75,1.01,2.37c0.61,0.61,1.46,1,2.37,1v-0.02h0.01h61.7h0.02 v0.02c0.91,0,1.75-0.39,2.37-1.01c0.61-0.61,1-1.46,1-2.37h-0.02V108.92L105.18,108.92z"
+          />
+        </svg>
+      </button>
+      <p class="message" id="copyMessage">Link copied to clipboard!</p>
+    </div>
+
+    <script>
+      const host = window.location.host;
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const title = urlParams.get("title");
+      document.getElementById("header").textContent = title;
+
+
+      const getDownloadLink = async () => {
+        try {
+          // Make the API request to fetch the file URL
+          const response = await fetch(
+            "http://localhost:4000/api/v1/file/download",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ host }),
+            }
+          );
+
+          const res = await response.json();
+          console.log("Download link fetched:", res);
+
+          // Check if the response contains the file URL
+          if (res.success && res.data.fileUrl) {
+            const fileUrl = `http://${res.data.fileUrl}`; // Format the URL
+            const fileLinkElement = document.getElementById("fileLink");
+            fileLinkElement.href = fileUrl; // Set the link to be clickable
+            fileLinkElement.innerText = fileUrl;
+            if (res.data.password) {
+              document.getElementById(
+                "password"
+              ).innerText = `Password: ${res.data.password}`;
+            } else {
+              document.getElementById("password").innerText =
+                "No password required.";
+            }
+          } else {
+            console.error("File URL not found in response");
+          }
+        } catch (err) {
+          console.error("Error fetching download link:", err);
+        }
+      };
+
+      // Copy the download link to clipboard
+      function copyLink() {
+        const fileLink = document.getElementById("fileLink");
+        const textArea = document.createElement("textarea");
+        textArea.value = fileLink.href; // Get the download link
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+
+        // Show message after copying
+        const message = document.getElementById("copyMessage");
+        message.style.display = "block";
+
+        // Hide the message after 2 seconds
+        setTimeout(() => {
+          message.style.display = "none";
+        }, 2000);
+      }
+
+      // Fetch the download link when the page loads
+      window.onload = getDownloadLink;
+    </script>
+  </body>
+</html>

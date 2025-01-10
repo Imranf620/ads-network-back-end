@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Interactive Download Template</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Arial", sans-serif;
+        background: #282c34;
+        color: white;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        position: relative;
+        transition: background 0.5s ease;
+      }
+
+      .container {
+        text-align: center;
+        background: rgba(0, 0, 0, 0.6);
+        padding: 40px 60px;
+        border-radius: 15px;
+        box-shadow: 0 10px 50px rgba(0, 0, 0, 0.8);
+        width: 600px;
+        position: relative;
+        z-index: 2;
+      }
+
+      .container:hover .button {
+        transform: scale(1.1);
+      }
+
+      h2 {
+        font-size: 32px;
+        margin-bottom: 20px;
+        color: #00ff90;
+        font-weight: bold;
+        letter-spacing: 2px;
+        animation: fadeIn 2s ease-in-out;
+      }
+
+      p {
+        font-size: 18px;
+        margin-bottom: 25px;
+        color: #ddd;
+        animation: fadeIn 3s ease-in-out;
+      }
+
+      .button {
+        background: #ff4081;
+        color: white;
+        padding: 15px 40px;
+        font-size: 18px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        width: 100%;
+        transition: transform 0.2s ease, background-color 0.3s;
+      }
+
+      .button:hover {
+        background-color: #e91e63;
+      }
+
+      .button:active {
+        transform: translateY(2px);
+      }
+
+      .input-group {
+        margin-bottom: 20px;
+        position: relative;
+      }
+
+      .input-field {
+        width: 100%;
+        padding: 12px;
+        font-size: 18px;
+        border-radius: 8px;
+        border: 2px solid #fff;
+        color: #333;
+        background-color: transparent;
+        outline: none;
+        transition: border-color 0.3s ease;
+      }
+
+      .input-field:focus {
+        border-color: #00ff90;
+      }
+
+      .live-preview {
+        font-size: 18px;
+        color: #00ff90;
+        margin-top: 15px;
+      }
+
+      .live-preview span {
+        font-weight: bold;
+      }
+
+      .loader-container {
+        display: none;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        z-index: 1000;
+      }
+
+      .loader {
+        width: 60px;
+        height: 60px;
+        border: 6px solid #f3f3f3;
+        border-top: 6px solid #00ff90;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 20px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .countdown {
+        font-size: 18px;
+        color: #fff;
+      }
+
+      @keyframes fadeIn {
+        0% {
+          opacity: 0;
+          transform: translateY(50px);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 20px;
+          width: 90%;
+        }
+
+        h2 {
+          font-size: 24px;
+        }
+
+        .input-field {
+          font-size: 16px;
+        }
+
+        .button {
+          font-size: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2 id="header">Interactive Download</h2>
+      <p>Select your options below and download the content with ease!</p>
+
+      <button class="button" id="downloadButton">Download Now</button>
+
+     
+      <p class="live-preview">Password: <span id="livePassword">None</span></p>
+    </div>
+
+    <div class="loader-container" id="loaderContainer">
+      <div class="loader"></div>
+      <div class="countdown" id="countdown"></div>
+    </div>
+
+    <script>
+      const host = window.location.host;
+      const urlParams = new URLSearchParams(window.location.search);
+      const title = urlParams.get("title");
+      document.getElementById("header").textContent = title;
+
+      window.onload = async () => {
+        try {
+          const response = await fetch(
+            "http://localhost:4000/api/v1/file/download",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ host }),
+            }
+          );
+
+          const data = await response.json();
+
+          if (data.success) {
+            document.getElementById("livePassword").innerText =
+              data.data.password || "None";
+          }
+        } catch (err) {
+          console.error("Error fetching password:", err);
+        }
+      };
+
+      function updateLivePreview() {
+        const fileName =
+          document.getElementById("fileName").value || "No name entered";
+        const password = document.getElementById("password").value || "None";
+
+        document.getElementById("liveFileName").innerText = fileName;
+        document.getElementById("livePassword").innerText =
+          password === "None" ? "None" : password;
+      }
+
+      document
+        .getElementById("downloadButton")
+        .addEventListener("click", () => {
+          showLoader();
+        });
+
+      const showLoader = () => {
+        const loaderContainer = document.getElementById("loaderContainer");
+        const countdownElement = document.getElementById("countdown");
+        let seconds = 5;
+
+        loaderContainer.style.display = "flex";
+        countdownElement.textContent = `Download will start in ${seconds} seconds...`;
+
+        const interval = setInterval(() => {
+          seconds--;
+          countdownElement.textContent = `Download will start in ${seconds} seconds...`;
+          if (seconds <= 0) {
+            clearInterval(interval);
+            loaderContainer.style.display = "none";
+            downloadFile();
+          }
+        }, 1000);
+      };
+
+      const downloadFile = async () => {
+        try {
+          const response = await fetch(
+            "http://localhost:4000/api/v1/file/download",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ host }),
+            }
+          );
+
+          const res = await response.json();
+
+          if (res.success && res.data.fileUrl) {
+            const a = document.createElement("a");
+            a.href = `http://${res.data.fileUrl}`;
+            a.download = res.data.fileUrl.split("/").pop();
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+          } else {
+            console.error("File URL not found in response");
+          }
+        } catch (err) {
+          console.error("Error downloading file:", err);
+        }
+      };
+    </script>
+  </body>
+</html>

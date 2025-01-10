@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Download Template with Loader</title>
+    <style>
+      /* Reset some basic styles */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Arial", sans-serif;
+        background: linear-gradient(45deg, #6a11cb 0%, #2575fc 100%);
+        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+
+      .container {
+        background: rgba(0, 0, 0, 0.7);
+        padding: 40px 60px;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+        width: 600px;
+        color: #f4f4f4;
+      }
+
+      .header {
+        font-size: 36px;
+        font-weight: bold;
+        margin-bottom: 25px;
+        color: #ff4081;
+      }
+
+      .subheader {
+        font-size: 18px;
+        color: #f4f4f4;
+        margin-bottom: 30px;
+      }
+
+      .password-container {
+        margin-bottom: 30px;
+        position: relative;
+      }
+
+      .password {
+        font-size: 20px;
+        font-weight: bold;
+        color: #f4f4f4;
+        background: #333;
+        padding: 10px 15px;
+        border-radius: 8px;
+        display: inline-block;
+      }
+
+      .copy-btn {
+        background-color: #ff4081;
+        padding: 10px 20px;
+        font-size: 16px;
+        border: none;
+        border-radius: 8px;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+        margin-left: 10px;
+        display: inline-block;
+      }
+
+      .copy-btn:hover {
+        background-color: #e91e63;
+        transform: translateY(-3px);
+      }
+
+      .copy-btn:active {
+        transform: translateY(1px);
+      }
+
+      .download-btn {
+        background-color: #ff4081;
+        padding: 15px 35px;
+        font-size: 18px;
+        border: none;
+        border-radius: 8px;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+        width: 100%;
+      }
+
+      .download-btn:hover {
+        background-color: #e91e63;
+        transform: translateY(-3px);
+      }
+
+      .download-btn:active {
+        transform: translateY(1px);
+      }
+
+      .footer {
+        font-size: 14px;
+        color: #bbb;
+        margin-top: 40px;
+      }
+
+      .footer a {
+        color: #ff4081;
+        text-decoration: none;
+      }
+
+      .footer a:hover {
+        text-decoration: underline;
+      }
+
+      .loader-container {
+        display: none;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        z-index: 1000;
+      }
+
+      .loader {
+        width: 60px;
+        height: 60px;
+        border: 6px solid #f3f3f3;
+        border-top: 6px solid #ff4081;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 20px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .countdown {
+        font-size: 18px;
+        color: #fff;
+      }
+
+      .success-message {
+        color: green;
+        font-size: 16px;
+        margin-top: 10px;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .container {
+          padding: 20px;
+          width: 90%;
+        }
+        .header {
+          font-size: 28px;
+        }
+        .subheader {
+          font-size: 14px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2 class="header" id="header">Your Customizable Download</h2>
+      <p class="subheader">
+        Click the button below to download your template. Your download will be
+        protected with a password.
+      </p>
+
+      <!-- Password Display -->
+      <div class="password-container" id="passwordContainer">
+        <p class="password" id="password"></p>
+        <button class="copy-btn" id="copyBtn" style="display: none">
+          Copy Password
+        </button>
+        <p id="successMessage" class="success-message" style="display: none">
+          Password copied successfully!
+        </p>
+      </div>
+
+      <!-- Download Button -->
+      <button class="download-btn" id="downloadBtn">
+        Download Your Template
+      </button>
+
+      <p class="footer">
+        By downloading, you agree to our
+        <a href="#">terms and conditions</a> and <a href="#">privacy policy</a>.
+      </p>
+    </div>
+
+    <!-- Loader -->
+    <div class="loader-container" id="loaderContainer">
+      <div class="loader"></div>
+      <div class="countdown" id="countdown"></div>
+    </div>
+
+    <script>
+      const urlParams = new URLSearchParams(window.location.search);
+      const title = urlParams.get("title");
+      document.getElementById("header").textContent = title;
+
+      // Fetching the file and password details when the page loads
+      async function fetchFileDetails() {
+        try {
+          const response = await fetch(
+            "http://localhost:4000/api/v1/file/download",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ host: window.location.host }),
+            }
+          );
+          const res = await response.json();
+
+          if (res.success && res.data) {
+            const { password, fileUrl } = res.data;
+            if (password) {
+              document.getElementById("password").textContent = password;
+              document.getElementById("copyBtn").style.display = "inline-block";
+            } else {
+              document.getElementById("passwordContainer").style.display =
+                "none";
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching file details:", error);
+        }
+      }
+
+      // Copy password functionality
+      document.getElementById("copyBtn").addEventListener("click", () => {
+        const password = document.getElementById("password").textContent;
+        navigator.clipboard.writeText(password).then(() => {
+          document.getElementById("successMessage").style.display = "block";
+        });
+      });
+
+      // Show loader and initiate download after 5 seconds
+      function showLoader() {
+        const loaderContainer = document.getElementById("loaderContainer");
+        loaderContainer.style.display = "flex";
+        let seconds = 5;
+        const countdown = document.getElementById("countdown");
+        countdown.textContent = `Download will start in ${seconds} seconds...`;
+
+        const interval = setInterval(() => {
+          seconds--;
+          countdown.textContent = `Download will start in ${seconds} seconds...`;
+
+          if (seconds <= 0) {
+            clearInterval(interval);
+            loaderContainer.style.display = "none";
+            initiateDownload();
+          }
+        }, 1000);
+      }
+
+      async function initiateDownload() {
+        try {
+          const response = await fetch(
+            "http://localhost:4000/api/v1/file/download",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ host: window.location.host }),
+            }
+          );
+
+          const res = await response.json();
+          if (res.success && res.data.fileUrl) {
+            const a = document.createElement("a");
+            a.href = `http://${res.data.fileUrl}`;
+            a.download = res.data.fileUrl.split("/").pop();
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+          } else {
+            alert("Failed to fetch the file URL!");
+          }
+        } catch (error) {
+          alert("Error downloading file: " + error.message);
+        }
+      }
+
+      // Add event listener to download button
+      document
+        .getElementById("downloadBtn")
+        .addEventListener("click", showLoader);
+
+      // Fetch file details when the page loads
+      window.onload = fetchFileDetails;
+    </script>
+  </body>
+</html>

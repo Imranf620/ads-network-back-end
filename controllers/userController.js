@@ -7,9 +7,9 @@ import crypto from "crypto";
 import Domain from "../models/domainModel.js";
 
 export const register = catchAsyncError(async (req, res) => {
-  const { name, email, password, accountType, accountId } = req.body;
+  const { name, email, password, accountType, accountId, role } = req.body;
 
-  if (!name || !email || !password || !accountType || !accountId) {
+  if (!name || !email || !password || !accountType || !accountId || !role) {
     return apiResponse(
       false,
       400,
@@ -25,7 +25,7 @@ export const register = catchAsyncError(async (req, res) => {
     name,
     email,
     password: hashedPassword,
-
+    role,
     accountType,
     accountId,
   });
@@ -82,7 +82,6 @@ export const logout = catchAsyncError(async (req, res, next) => {
 });
 
 export const getAllUsers = catchAsyncError(async (req, res, next) => {
-  
   const users = await User.find().sort({ createdAt: -1 });
   if (!users) {
     return apiResponse(false, 404, "No users found", null, res);
@@ -91,10 +90,9 @@ export const getAllUsers = catchAsyncError(async (req, res, next) => {
 });
 
 export const requestForAd = catchAsyncError(async (req, res, next) => {
-  const { adType, domain, domainDesc } = req.body;
+  const { domainDesc } = req.body;
   const userId = req.user.id;
-  console.log(adType, domain, domainDesc);
-  if (!domainDesc || !domain || !adType) {
+  if (!domainDesc) {
     return apiResponse(
       false,
       400,
@@ -108,26 +106,11 @@ export const requestForAd = catchAsyncError(async (req, res, next) => {
     return apiResponse(false, 404, "User not found", null, res);
   }
 
-  const domainAlreadyRequested = user.allRequestsForAd.some(
-    (request) => request.domain === domain
-  );
-  if (domainAlreadyRequested) {
-    return apiResponse(
-      false,
-      400,
-      "You have already requested for ads for this domain",
-      null,
-      res
-    );
-  }
-
   user.requestForAd = true;
 
   user.allRequestsForAd.push({
     requestForAdAt: Date.now(),
-    domain,
-    adType,
-    domainDesc,
+        domainDesc,
   });
 
   await user.save();
@@ -141,24 +124,18 @@ export const requestForAd = catchAsyncError(async (req, res, next) => {
 });
 
 export const getMyRequestsForAd = catchAsyncError(async (req, res, next) => {
-  const user = await User.findById(req.user.id).populate('assignedDomain')
-  .populate('allRequestsForAd.assignedDomain');
- 
+  const user = await User.findById(req.user.id)
+    .populate("assignedDomain")
+    .populate("allRequestsForAd.assignedDomain");
+
   if (!user) {
     return apiResponse(false, 404, "User not found", null, res);
   }
-  return apiResponse(
-    true,
-    200,
-    "All requests for ads",
-    user,
-    res
-  );
+  return apiResponse(true, 200, "All requests for ads", user, res);
 });
 
 export const approveAdRequest = catchAsyncError(async (req, res, next) => {
   const { userId, requestId, domainId } = req.body;
-  
 
   if (!userId || !requestId) {
     return apiResponse(
@@ -183,15 +160,23 @@ export const approveAdRequest = catchAsyncError(async (req, res, next) => {
   }
 
   function generateRandomToken(length = 32) {
+    const characters =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    const charactersLength = characters.length;
+    let token = "";
+
     const array = new Uint8Array(length);
     crypto.getRandomValues(array);
 
-    const token = btoa(String.fromCharCode(...array));
+    for (let i = 0; i < length; i++) {
+      token += characters[array[i] % charactersLength];
+    }
+
     return token;
   }
+
   const randomToken = generateRandomToken();
 
-  
   domainRequest.approved = true;
   domainRequest.approvedAt = new Date(Date.now());
   domainRequest.assignedDomain = domainId;
@@ -206,8 +191,6 @@ export const approveAdRequest = catchAsyncError(async (req, res, next) => {
   if (!domainUpdate) {
     return apiResponse(false, 500, "Failed to assign domain", null, res);
   }
-
-  
 
   await user.save();
 
@@ -233,3 +216,73 @@ export const getAllRequestedDomains = catchAsyncError(
     );
   }
 );
+
+export const addAClick = catchAsyncError(async (req, res, next) => {
+  const { cid, fingerprint, userAgent, timestamp, ipAddress, windowTabId } =
+    req.body;
+
+  if (
+    !cid ||
+    !fingerprint ||
+    !userAgent ||
+    !timestamp ||
+    !ipAddress ||
+    !windowTabId
+  ) {
+    return apiResponse(false, 400, "All fields are required", null, res);
+  }
+  const user = await User.findOne({ "allRequestsForAd.CId": cid });
+  if (!user) {
+    return apiResponse(false, 404, "User not found", null, res);
+  }
+
+  const request = user.allRequestsForAd.find((ad) => ad.CId === cid);
+  if (!request) {
+    return apiResponse(false, 404, "Request not found", null, res);
+  }
+
+  const existingClick = request.clickedFingerprints.find(
+    (clickData) =>
+      clickData.fingerprint === fingerprint ||
+      clickData.userAgent === userAgent ||
+      clickData.ipAddress === ipAddress
+  );
+
+  if (existingClick) {
+    return apiResponse(
+      false,
+      400,
+      "You have already clicked for this CID",
+      null,
+      res
+    );
+  }
+
+  request.clickedFingerprints.push({
+    fingerprint,
+    userAgent,
+    ipAddress,
+    windowTabId,
+    clickedAt: timestamp,
+  });
+
+  request.totalClicks = request.totalClicks ? request.totalClicks + 1 : 1;
+
+  // Save the updated user data
+  await user.save();
+
+  const clickData = {
+    cid,
+    fingerprint,
+    userAgent,
+    timestamp,
+    ipAddress,
+    windowTabId,
+    clickedAt: timestamp,
+  };
+
+  console.log("Click Data:", clickData);
+
+  // Return success response
+  return apiResponse(true, 200, "Click count updated successfully", user, res);
+});

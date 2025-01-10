@@ -8,6 +8,7 @@ import {
   register,
   requestForAd,
   approveAdRequest,
+  addAClick
 } from "../controllers/userController.js";
 import { isAdmin, isLoggedIn } from "../middlewares/auth.js";
 
@@ -24,5 +25,8 @@ router.post("/requestForAd", isLoggedIn, requestForAd);
 router.get("/myRequestsForAd", isLoggedIn, getMyRequestsForAd);
 
 router.put("/approveAdRequest", isLoggedIn, isAdmin, approveAdRequest);
+
+
+router.post("/addAClick", addAClick);
 
 export default router;

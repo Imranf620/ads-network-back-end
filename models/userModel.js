@@ -20,8 +20,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["user", "admin"],
-      default: "user",
+      enum: ["monetizer", "admin", "advertiser"],
     },
     Cid: String,
     assignedDomain: {
@@ -43,13 +42,12 @@ const userSchema = new mongoose.Schema(
     allRequestsForAd: [
       {
         requestForAdAt: Date,
-        domain: {
-          type: String,
-          required: true,
-        },
+        // domain: {
+        //   type: String,
+        //   required: true,
+        // },
         adType: {
           type: String,
-          required: true,
         },
         domainDesc: {
           type: String,
@@ -59,18 +57,33 @@ const userSchema = new mongoose.Schema(
           type: Boolean,
           default: false,
         },
-        assignedDomain:{
-          type:mongoose.Schema.Types.ObjectId,
-          ref:"Domain"
+        assignedDomain: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Domain",
         },
-        CId:String,
-        approvedAt:Date
+        CId: String,
+        approvedAt: Date,
+        totalClicks: {
+          type: Number,
+          default: 0,
+        },
+        clickedFingerprints: [
+          {
+            cid: String,
+            fingerprint: String,
+            userAgent: String,
+            timestamp: String,
+            ipAddress: String,
+            windowTabId: String,
+            clickedAt: Date,
+          },
+        ],
       },
     ],
+
     assignedDomainAt: Date,
     hashedId: String,
     resetPasswordToken: String,
-
 
     resetPasswordExpire: Date,
   },
