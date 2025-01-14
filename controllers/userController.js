@@ -88,6 +88,7 @@ export const getAllUsers = catchAsyncError(async (req, res, next) => {
   }
   return apiResponse(true, 200, "All users", users, res);
 });
+// 
 
 export const requestForAd = catchAsyncError(async (req, res, next) => {
   const { domainDesc } = req.body;
