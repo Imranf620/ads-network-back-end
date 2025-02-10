@@ -26,6 +26,25 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
+
+    - name: Set environment variables
+      run: |
+        echo "PORT=${{ secrets.PORT }}" >> .env
+        echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
+        echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+        echo "JWT_EXPIRE=${{ secrets.JWT_EXPIRE }}" >> .env
+        echo "COOKIE_EXPIRE=${{ secrets.COOKIE_EXPIRE }}" >> .env
+        echo "FRONTEND_PORT=${{ secrets.FRONTEND_PORT }}" >> .env
+        echo "REDIRECT_PORT1=${{ secrets.REDIRECT_PORT1 }}" >> .env
+        echo "REDIRECT_PORT2=${{ secrets.REDIRECT_PORT2 }}" >> .env
+        echo "REDIRECT_PORT3=${{ secrets.REDIRECT_PORT3 }}" >> .env
+        echo "TEMPLATE_PORT=${{ secrets.TEMPLATE_PORT }}" >> .env
+        echo "TEMPLATE_PORT2=${{ secrets.TEMPLATE_PORT2 }}" >> .env
+        echo "TEMPLATE_PORT3=${{ secrets.TEMPLATE_PORT3 }}" >> .env
+        echo "TEMPLATE_PORT4=${{ secrets.TEMPLATE_PORT4 }}" >> .env
+        echo "BUTTON_PORT=${{ secrets.BUTTON_PORT }}" >> .env
+        
+        
     - run: npm ci
     - run: npm run build --if-present
 
