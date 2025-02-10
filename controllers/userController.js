@@ -282,7 +282,6 @@ export const addAClick = catchAsyncError(async (req, res, next) => {
     clickedAt: timestamp,
   };
 
-  console.log("Click Data:", clickData);
 
   // Return success response
   return apiResponse(true, 200, "Click count updated successfully", user, res);
