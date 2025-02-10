@@ -34,6 +34,7 @@ const ports = [
   process.env.REDIRECT_PORT1 || 10001,
   process.env.REDIRECT_PORT2 || 10002,
   process.env.REDIRECT_PORT3 || 10003,
+  process.env.BUTTON_PORT || 5501,
   process.env.FRONTEND_PORT || 5173,
 ];
 
@@ -75,4 +76,5 @@ const createServer = (port, file) => {
   { port: process.env.REDIRECT_PORT1 || 10001, file: "redirect.html" },
   { port: process.env.REDIRECT_PORT2 || 10002, file: "redirect2.html" },
   { port: process.env.REDIRECT_PORT3 || 10003, file: "redirect3.html" },
+  { port: process.env.BUTTON_PORT || 5501, file: "5501.html" },
 ].forEach(({ port, file }) => createServer(port, file));
