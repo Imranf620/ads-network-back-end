@@ -176,6 +176,7 @@
         const resultData = await response.json();
 
         console.log("Redirect Domains:", resultData.data);
+        console.log("Redirect Domains Length:", resultData.data.length);
 
         if (resultData.data && resultData.data.length > 0) {
           // Random index from the list of domains
@@ -184,7 +185,7 @@
           );
 
           // Get the domain
-          let domain = resultData.data[redirectRandomDomain].domain;
+          let domain = resultData.data[redirectRandomDomain].domain.trim();
           console.log("Redirecting to Domain:", domain);
 
           // If the domain doesn't start with 'http://' or 'https://', add 'http://'
@@ -194,7 +195,7 @@
 
           // Open the domain in a new window or tab
           console.log("Opening domain:", domain); // Log to verify the URL
-          window.location = domain+'?title='+title;
+          // window.location = domain+'?title='+title;
         } else {
           console.error("No redirect domains found.");
         }
