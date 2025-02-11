@@ -115,16 +115,24 @@ export const getAllTemplateDomains = catchAsyncError(async (req, res, next) => {
 
 export const getButtonDomain = catchAsyncError(async (req, res, next) => {
   let { host } = req.body;
+  console.log(host.trim());
 
   const httpsHost = host.startsWith("https://") ? host : `https://${host}`;
   const httpHost = host.startsWith("http://") ? host : `http://${host}`;
   const plainHost = host.replace(/^https?:\/\//i, ""); 
 
+  const httpsHostSlash = httpsHost.endsWith("/") ? httpsHost : `${httpsHost}/`;
+  const httpHostSlash = httpHost.endsWith("/") ? httpHost : `${httpHost}/`;
+  const plainHostSlash = plainHost.endsWith("/") ? plainHost : `${plainHost}/`;
+
   const domainExists = await Domain.findOne({
     $or: [
       { domain: httpsHost },
       { domain: httpHost },
-      { domain: plainHost }
+      { domain: plainHost },
+      {domain:httpsHostSlash},
+      {domain:httpHostSlash},
+      {domain:plainHostSlash}
     ],
   });
 
