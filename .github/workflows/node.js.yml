@@ -43,6 +43,10 @@ jobs:
         echo "TEMPLATE_PORT3=${{ secrets.TEMPLATE_PORT3 }}" >> .env
         echo "TEMPLATE_PORT4=${{ secrets.TEMPLATE_PORT4 }}" >> .env
         echo "BUTTON_PORT=${{ secrets.BUTTON_PORT }}" >> .env
+        echo "TEMPLATE1=${{ secrets.TEMPLATE1 }}" >> .env
+        echo "REDIRECT1=${{ secrets.REDIRECT1 }}" >> .env
+        echo "FRONTEND_URL=${{ secrets.FRONTEND_URL }}" >> .env
+
         
         
     - run: npm ci
