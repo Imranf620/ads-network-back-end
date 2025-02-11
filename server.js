@@ -36,13 +36,16 @@ const ports = [
   process.env.REDIRECT_PORT3 || 10003,
   process.env.BUTTON_PORT || 5501,
   process.env.FRONTEND_PORT || 5173,
+  process.env.FRONTEND_URL,
+  process.env.REDIRECT1,
+  process.env.TEMPLATE1
 ];
 
 const allowedOrigins = ports.map((p) => `http://localhost:${p}`);
 
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: allowedOrigins || process.env.FRONTEND_URL,
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization", "Origin", "X-Requested-With"],
     exposedHeaders: ["Authorization"],
