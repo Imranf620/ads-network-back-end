@@ -46,6 +46,8 @@ jobs:
         echo "TEMPLATE1=${{ secrets.TEMPLATE1 }}" >> .env
         echo "REDIRECT1=${{ secrets.REDIRECT1 }}" >> .env
         echo "FRONTEND_URL=${{ secrets.FRONTEND_URL }}" >> .env
+        echo "BUTTON1=${{ secrets.BUTTON1 }}" >> .env
+
 
         
         

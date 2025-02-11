@@ -38,7 +38,8 @@ const ports = [
   process.env.FRONTEND_PORT || 5173,
   process.env.FRONTEND_URL,
   process.env.REDIRECT1,
-  process.env.TEMPLATE1
+  process.env.TEMPLATE1,
+  process.env.BUTTON1
 ];
 
 const allowedOrigins = ports.map((p) => `http://localhost:${p}`);
