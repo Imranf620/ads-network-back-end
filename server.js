@@ -25,8 +25,8 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads"), {
 
 app.use(cookieParser());
 
-const ports = [
-  port,
+const localPorts = [
+  process.env.PORT || 4000,
   process.env.TEMPLATE_PORT || 5001,
   process.env.TEMPLATE_PORT2 || 5002,
   process.env.TEMPLATE_PORT3 || 5003,
@@ -36,22 +36,34 @@ const ports = [
   process.env.REDIRECT_PORT3 || 10003,
   process.env.BUTTON_PORT || 5501,
   process.env.FRONTEND_PORT || 5173,
+];
+
+const localOrigins = localPorts.map((p) => `http://localhost:${p}`);
+
+const externalOrigins = [
   process.env.FRONTEND_URL,
   process.env.REDIRECT1,
   process.env.TEMPLATE1,
-  process.env.BUTTON1
-];
+  process.env.BUTTON1,
+].filter(Boolean);
 
-const allowedOrigins = ports.map((p) => `http://localhost:${p}`);
+const allowedOrigins = [...localOrigins, ...externalOrigins];
 
 app.use(
   cors({
-    origin: allowedOrigins || process.env.FRONTEND_URL,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization", "Origin", "X-Requested-With"],
     exposedHeaders: ["Authorization"],
   })
 );
+
 
 app.get("/", (req, res) => apiResponse(true, 200, "Welcome to the API", null, res));
 app.use("/api/v1", route);
