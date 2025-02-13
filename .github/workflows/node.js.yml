@@ -51,6 +51,9 @@ jobs:
         echo "S3_SECRET_ACCESS_KEY=${{ secrets.S3_SECRET_ACCESS_KEY }}" >> .env
         echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> .env
         echo "BUCKET_NAME=${{ secrets.BUCKET_NAME }}" >> .env
+        echo "REDIRECT2=${{ secrets.REDIRECT2 }}" >> .env
+        echo "REDIRECT3=${{ secrets.REDIRECT3 }}" >> .env
+    
 
         
         

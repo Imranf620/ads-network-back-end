@@ -45,6 +45,8 @@ const externalOrigins = [
   process.env.REDIRECT1,
   process.env.TEMPLATE1,
   process.env.BUTTON1,
+  process.env.REDIRECT2,
+  process.env.REDIRECT3,
 ].filter(Boolean);
 
 const allowedOrigins = [...localOrigins, ...externalOrigins];
