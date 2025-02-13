@@ -137,6 +137,7 @@
             "https://databloom.xyz/api/api/v1/domain/get/all/template"
           );
           const data = await response.json();
+          console.log("data", data)
           return data.data;
         } catch (error) {
           console.error("Error fetching domains:", error);
@@ -144,17 +145,23 @@
         }
       }
 
+   
       async function setDownloadLink() {
-        const templateDomains = await getAllTemplateDomains();
-        if (templateDomains.length > 0) {
-          const randomDomain =
-            templateDomains[Math.floor(Math.random() * templateDomains.length)]
-              .domain;
-          window.location.href = randomDomain + "?title=" + title;
-        } else {
-          console.error("No template domains found.");
-        }
-      }
+  const templateDomains = await getAllTemplateDomains();
+  
+  if (templateDomains.length > 0) {
+    const randomDomain = templateDomains[Math.floor(Math.random() * templateDomains.length)].domain.trim();
+    
+    if (randomDomain.startsWith("http://") || randomDomain.startsWith("https://")) {
+      window.location.href = randomDomain + "?title=" + encodeURIComponent(title);
+    } else {
+      window.location.href = "https://" + randomDomain + "?title=" + encodeURIComponent(title);
+    }
+  } else {
+    console.error("No template domains found.");
+  }
+}
+
 
       document
         .getElementById("downloadButton")
