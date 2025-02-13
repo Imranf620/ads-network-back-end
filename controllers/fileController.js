@@ -6,67 +6,116 @@ import catchAsyncError from "../middlewares/catchAsyncError.js";
 import apiResponse from "../utils/apiResponse.js";
 import Domain from "../models/domainModel.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import pkg from "@aws-sdk/s3-request-presigner";
+const { getSignedUrl } = pkg;
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+} from "@aws-sdk/client-s3";
 
-export const uploadFile = catchAsyncError(async (req, res) => {
+const __filename = fileURLToPath(import.meta.url);
+
+// AWS S3 setup (v3)
+const s3 = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.S3_ACCESS_KEY,
+    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+  },
+});
+
+export const getSignedUrlHandler = async (req, res) => {
   try {
-    const domainId = req.body.domainId;
-    const password = req.body.password;
-    const fileUrl = req.body.fileUrl;
-  
+    const { filename, fileType } = req.body;
+
+    if (!filename || !fileType) {
+      return res
+        .status(400)
+        .json({ message: "Filename or fileType not provided" });
+    }
+
+    const fileName = `ads/${filename}`;
+    const params = {
+      Bucket: process.env.BUCKET_NAME,
+      Key: fileName,
+      ContentType: fileType,
+      ACL: "public-read",
+    };
+
+    // Create a PutObjectCommand
+    const command = new PutObjectCommand(params);
+    const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
+
+    res.json({ url });
+  } catch (error) {
+    console.error("Error generating presigned URL:", error);
+    res.status(500).json({ message: "Error generating presigned URL" });
+  }
+};
+
+export const checkAndDeleteFile = catchAsyncError(async (req, res) => {
+  try {
+    const { domainId } = req.body;
 
     if (!domainId) {
-      return apiResponse(false, 400, "Domain ID is required", null, res);
+      return res.status(400).json({ message: "Domain ID is required" });
     }
 
-    if (!req.file && fileUrl.length === 0) {
-      console.log("No file uploaded");
-      return apiResponse(false, 400, "No file uploaded", null, res);
-    }
-
-    // Check if the domain already has a file uploaded
     const existingFile = await File.findOne({ domain: domainId });
 
-    // If there's an existing file, delete it from the filesystem
-    if (existingFile && fileUrl.length === 0) {
-      const filePath = path.join(__dirname, "../uploads", existingFile.path);
+    if (existingFile) {
+      const oldFileKey = `ads/${existingFile.fileName}`;
 
-      fs.unlink(filePath, (err) => {
-        if (err) {
-          console.error("Error deleting existing file:", err);
-        } else {
-          console.log("Old file deleted successfully");
-        }
-      });
+      // Delete old file from S3
+      try {
+        const deleteCommand = new DeleteObjectCommand({
+          Bucket: process.env.BUCKET_NAME,
+          Key: oldFileKey,
+        });
+        await s3.send(deleteCommand);
+        console.log("Old file deleted from S3");
+      } catch (deleteError) {
+        console.error("Error deleting old file from S3:", deleteError);
+      }
 
-      // Remove the existing file from the database
+      // Remove old file from database
       await File.findByIdAndDelete(existingFile._id);
-
       console.log("Old file entry removed from database");
     }
 
-    // Save the new file to the database with relative path
-    const fileData = {
-      fileName: fileUrl.length === 0 ? req.file.originalname : "fileUrl",
-      path: fileUrl.length === 0 ? `uploads/${req.file.filename}` : fileUrl,
+    return res.status(200).json({ success: true, message: "Existing file deleted (if any)" });
+  } catch (error) {
+    console.error("Error checking and deleting file:", error);
+    return res.status(500).json({ message: "Error checking and deleting file" });
+  }
+});
+
+
+export const uploadFile = catchAsyncError(async (req, res) => {
+  try {
+    const { fileName, domainId, password } = req.body;
+    console.log(fileName)
+
+    if (!fileName || !domainId) {
+      return res.status(400).json({ message: "File name and domain ID are required" });
+    }
+
+    const fileUrl = `https://s3.${process.env.AWS_REGION}.amazonaws.com/${process.env.BUCKET_NAME}/ads/${fileName}`;
+
+    // Save new file in the database
+    const newFile = await File.create({
+      fileName,
+      path: fileUrl,
       domain: domainId,
       password,
-    };
+    });
 
-    const newFile = await File.create(fileData);
     console.log("New file saved to database:", newFile);
-
-    return apiResponse(true, 200, "File uploaded successfully", newFile, res);
+    return res.status(200).json({ success: true, message: "File uploaded successfully", newFile });
   } catch (error) {
-    console.log(error);
-    return apiResponse(
-      false,
-      500,
-      "An error occurred while uploading the file",
-      null,
-      res
-    );
+    console.error("Error uploading file:", error);
+    return res.status(500).json({ message: "An error occurred while uploading the file" });
   }
 });
 
