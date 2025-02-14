@@ -82,7 +82,8 @@ export const logout = catchAsyncError(async (req, res, next) => {
 });
 
 export const getAllUsers = catchAsyncError(async (req, res, next) => {
-  const users = await User.find().sort({ createdAt: -1 });
+  const users = await User.find().sort({ createdAt: -1 })
+  .populate("allRequestsForAd.assignedDomain", "domain");
   if (!users) {
     return apiResponse(false, 404, "No users found", null, res);
   }
@@ -286,3 +287,97 @@ export const addAClick = catchAsyncError(async (req, res, next) => {
   // Return success response
   return apiResponse(true, 200, "Click count updated successfully", user, res);
 });
+
+
+export const getClickStats = catchAsyncError(async (req, res) => {
+  try {
+    const { domainId, startDate, endDate } = req.query;
+
+    // Convert to Date objects for comparisons
+    const today = new Date();
+    const last7Days = new Date();
+    last7Days.setDate(today.getDate() - 7);
+    const last30Days = new Date();
+    last30Days.setDate(today.getDate() - 30);
+
+    // Query filter
+    let matchFilter = {};
+
+    if (domainId) {
+      matchFilter["allRequestsForAd.assignedDomain"] = domainId;
+    }
+
+    if (startDate && endDate) {
+      matchFilter["allRequestsForAd.clickedFingerprints.clickedAt"] = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate),
+      };
+    }
+
+    // Aggregate click statistics
+    const users = await User.aggregate([
+      { $unwind: "$allRequestsForAd" },
+      { $unwind: "$allRequestsForAd.clickedFingerprints" },
+      { $match: matchFilter },
+
+      {
+        $group: {
+          _id: "$allRequestsForAd.assignedDomain",
+          domain: { $first: "$allRequestsForAd.domainDesc" },
+          totalClicks: { $sum: 1 },
+          todayClicks: {
+            $sum: {
+              $cond: [
+                { $gte: ["$allRequestsForAd.clickedFingerprints.clickedAt", today] },
+                1,
+                0,
+              ],
+            },
+          },
+          last7DaysClicks: {
+            $sum: {
+              $cond: [
+                { $gte: ["$allRequestsForAd.clickedFingerprints.clickedAt", last7Days] },
+                1,
+                0,
+              ],
+            },
+          },
+          last30DaysClicks: {
+            $sum: {
+              $cond: [
+                { $gte: ["$allRequestsForAd.clickedFingerprints.clickedAt", last30Days] },
+                1,
+                0,
+              ],
+            },
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "domains",
+          localField: "_id",
+          foreignField: "_id",
+          as: "domainDetails",
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          domainId: "$_id",
+          domainName: { $arrayElemAt: ["$domainDetails.domain", 0] },
+          totalClicks: 1,
+          todayClicks: 1,
+          last7DaysClicks: 1,
+          last30DaysClicks: 1,
+        },
+      },
+    ]);
+
+    return apiResponse(true, 200, "Click statistics retrieved", users, res);
+  } catch (error) {
+    return apiResponse(false, 500, "Error fetching click stats", error, res);
+  }
+});
+
