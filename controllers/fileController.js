@@ -122,18 +122,25 @@ export const uploadFile = catchAsyncError(async (req, res) => {
 export const downloadFile = catchAsyncError(async (req, res, next) => {
   try {
     let { host } = req.body;
+    console.log("host", host);
 
-    // Extract the server host (port 4000 in this case)
-    const serverHost = "localhost:4000"; // Adjust this to your actual server host and port
+    // Normalize the host: Ensure it starts with https:// and has a trailing slash
+    const normalizedHost = host.replace(/^https?:\/\//i, "").replace(/\/$/, "") + "/"; 
 
-    const httpsHost = host.startsWith("https://") ? host : `https://${host}`;
-    const httpHost = host.startsWith("http://") ? host : `http://${host}`;
-    const plainHost = host.replace(/^https?:\/\//i, "");
+    const httpsHost = `https://${normalizedHost}`;
+    const httpHost = `http://${normalizedHost}`;
 
     // Find the domain entry in the database
     const domainExists = await Domain.findOne({
-      $or: [{ domain: httpsHost }, { domain: httpHost }, { domain: plainHost }],
+      $or: [
+        { domain: httpsHost }, 
+        { domain: httpHost },
+        { domain: normalizedHost }, 
+        { domain: host.endsWith("/") ? host : host + "/" } // Ensure trailing slash in query
+      ],
     });
+
+    console.log(domainExists);
 
     if (!domainExists) {
       return apiResponse(false, 404, "Domain not found", null, res);
@@ -145,19 +152,13 @@ export const downloadFile = catchAsyncError(async (req, res, next) => {
       return apiResponse(false, 404, "File not found", null, res);
     }
 
-    // Correct the file URL generation to use the server host (localhost:4000)
-    const fileUrl = `${serverHost}/${file.path}`;
+    // File URL
+    const fileUrl = file.path;
 
-    // Return the URL for download
-    return apiResponse(
-      true,
-      200,
-      "File ready for download",
-      { fileUrl, password: file.password },
-      res
-    );
+    return apiResponse(true, 200, "File ready for download", { fileUrl, password: file.password }, res);
+
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return apiResponse(false, 500, "An error occurred", null, res);
   }
 });
