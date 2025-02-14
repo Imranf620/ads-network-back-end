@@ -223,7 +223,7 @@
       async function fetchFileDetails() {
         try {
           const response = await fetch(
-            "http://localhost:4000/api/v1/file/download",
+            "https://databloom.xyz/api/api/v1/file/download",
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -278,7 +278,7 @@
       async function initiateDownload() {
         try {
           const response = await fetch(
-            "http://localhost:4000/api/v1/file/download",
+            "https://databloom.xyz/api/api/v1/file/download",
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -289,7 +289,7 @@
           const res = await response.json();
           if (res.success && res.data.fileUrl) {
             const a = document.createElement("a");
-            a.href = `http://${res.data.fileUrl}`;
+            a.href = `${res.data.fileUrl}`;
             a.download = res.data.fileUrl.split("/").pop();
             document.body.appendChild(a);
             a.click();

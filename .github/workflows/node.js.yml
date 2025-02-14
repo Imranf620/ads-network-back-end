@@ -53,7 +53,9 @@ jobs:
         echo "BUCKET_NAME=${{ secrets.BUCKET_NAME }}" >> .env
         echo "REDIRECT2=${{ secrets.REDIRECT2 }}" >> .env
         echo "REDIRECT3=${{ secrets.REDIRECT3 }}" >> .env
-    
+        echo "TEMPLATE2=${{ secrets.TEMPLATE2 }}" >> .env
+        echo "TEMPLATE3=${{ secrets.TEMPLATE3 }}" >> .env
+      
 
         
         
