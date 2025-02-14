@@ -132,13 +132,15 @@ export const downloadFile = catchAsyncError(async (req, res, next) => {
 
     // Find the domain entry in the database
     const domainExists = await Domain.findOne({
-      $or: [
-        { domain: httpsHost }, 
-        { domain: httpHost },
-        { domain: normalizedHost }, 
-        { domain: host.endsWith("/") ? host : host + "/" } // Ensure trailing slash in query
-      ],
-    });
+      domain: { 
+          $in: [
+              normalizedHost.replace("/", "").toLowerCase(), 
+              httpsHost.toLowerCase(), 
+              httpHost.toLowerCase(), 
+              host.replace(/^https?:\/\//i, "").replace("/", "").toLowerCase()
+          ] 
+      }
+  });
 
     console.log(domainExists);
 
