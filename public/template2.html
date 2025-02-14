@@ -226,6 +226,7 @@
             "https://databloom.xyz/api/api/v1/file/download",
             {
               method: "POST",
+             
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ host: window.location.host }),
             }
@@ -281,6 +282,7 @@
             "https://databloom.xyz/api/api/v1/file/download",
             {
               method: "POST",
+              credentials:"include",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ host: window.location.host }),
             }

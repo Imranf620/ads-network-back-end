@@ -7,21 +7,13 @@ import route from "./routes/indexRoute.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import path from "path";
-import { fileURLToPath } from "url";
 
 const app = express();
 const port = process.env.PORT || 4000;
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 app.use(express.json({ limit: "50mb", extended: true }));
 
-app.use("/uploads", express.static(path.join(__dirname, "uploads"), {
-  setHeaders: (res) => {
-    res.set("Content-Disposition", "attachment");
-  }
-}));
 
 app.use(cookieParser());
 
@@ -51,7 +43,7 @@ const externalOrigins = [
   process.env.REDIRECT3,
 ].filter(Boolean);
 
-const allowedOrigins = [...localOrigins, ...externalOrigins];
+const allowedOrigins = [...localOrigins, ...externalOrigins, "https://launchclo.xyz", "https://orbitne.store", "https://skynatix.store", "https://managerd.xyz", "https://webflaux.xyz", "https://gladewave.xyz"];
 
 app.use(
   cors({

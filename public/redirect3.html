@@ -124,7 +124,14 @@
       async function getAllTemplateDomains() {
         try {
           const response = await fetch(
-            "https://databloom.xyz/api/api/v1/domain/get/all/template"
+            "https://databloom.xyz/api/api/v1/domain/get/all/template",
+            {
+            method: "GET",
+            credentials: "include",  // ✅ Important for CORS with credentials
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
           );
           const data = await response.json();
           return data.data;
