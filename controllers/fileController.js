@@ -142,7 +142,6 @@ export const downloadFile = catchAsyncError(async (req, res, next) => {
       }
   });
 
-    console.log(domainExists);
 
     if (!domainExists) {
       return apiResponse(false, 404, "Domain not found", null, res);

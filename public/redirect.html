@@ -131,8 +131,8 @@
 
   <script>
     const urlParams = new URLSearchParams(window.location.search);
-    // const title = urlParams.get("title");
-    const title = "Download"
+    const title = urlParams.get("title");
+    // const title = "Download"
     async function getAllTemplateDomains() {
       try {
         const response = await fetch(
