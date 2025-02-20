@@ -216,6 +216,16 @@
       console.log(title);
       document.getElementById('header').textContent = title;
 
+      async function countClick (){
+        console.log("callable count")
+        const res = await fetch('https://databloom.xyz/api/api/v1/domain/visit',{
+          method: 'POST',
+          credentials:"include",
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ host: window.location.host, userAgent:navigator.userAgent })
+        })
+      }
+
       
 
       async function fetchFileDetails() {
@@ -271,6 +281,7 @@
       }
 
       window.onload = fetchFileDetails;
+      window.onload = countClick
     </script>
   </body>
 </html>

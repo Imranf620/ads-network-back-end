@@ -6,6 +6,7 @@ import User from "../models/userModel.js";
 export const createDomain = catchAsyncError(async (req, res) => {
   try {
     const { domain, type } = req.body;
+    const userId = req.user;
     if (!domain || !type) {
       return apiResponse(
         false,
@@ -24,7 +25,7 @@ export const createDomain = catchAsyncError(async (req, res) => {
     const domainModel = await Domain.create({
       domain,
       type,
-      owner: "6772ce113d7e91563a30e0e7", // Use a hardcoded user ID or `req.user.id` if available
+      owner: userId,
     });
 
     // Populate owner field
@@ -39,10 +40,11 @@ export const createDomain = catchAsyncError(async (req, res) => {
 });
 
 export const getAllDomains = catchAsyncError(async (req, res, next) => {
-  const domains = await Domain.find().sort({ createdAt: -1 })
+  const domains = await Domain.find()
+    .sort({ createdAt: -1 })
     .populate("owner", "name email")
     .populate("assignedTo", "name email")
-    .populate("referenceTo", "domain")
+    .populate("referenceTo", "domain");
   apiResponse(true, 200, "All domains", domains, res);
 });
 
@@ -109,17 +111,16 @@ export const getAllRedirectDomains = catchAsyncError(async (req, res, next) => {
 });
 
 export const getAllTemplateDomains = catchAsyncError(async (req, res, next) => {
-  const domains = await Domain.find({ type: "template" })
+  const domains = await Domain.find({ type: "template" });
   apiResponse(true, 200, "All template domains", domains, res);
-})
+});
 
 export const getButtonDomain = catchAsyncError(async (req, res, next) => {
   let { host } = req.body;
-  console.log(host.trim());
 
   const httpsHost = host.startsWith("https://") ? host : `https://${host}`;
   const httpHost = host.startsWith("http://") ? host : `http://${host}`;
-  const plainHost = host.replace(/^https?:\/\//i, ""); 
+  const plainHost = host.replace(/^https?:\/\//i, "");
 
   const httpsHostSlash = httpsHost.endsWith("/") ? httpsHost : `${httpsHost}/`;
   const httpHostSlash = httpHost.endsWith("/") ? httpHost : `${httpHost}/`;
@@ -130,9 +131,9 @@ export const getButtonDomain = catchAsyncError(async (req, res, next) => {
       { domain: httpsHost },
       { domain: httpHost },
       { domain: plainHost },
-      {domain:httpsHostSlash},
-      {domain:httpHostSlash},
-      {domain:plainHostSlash}
+      { domain: httpsHostSlash },
+      { domain: httpHostSlash },
+      { domain: plainHostSlash },
     ],
   });
 
@@ -143,26 +144,73 @@ export const getButtonDomain = catchAsyncError(async (req, res, next) => {
   return res.status(404).json({ success: false, message: "Domain not found" });
 });
 
-
-export const deleteDomain = catchAsyncError(async(req,res,next)=>{
+export const deleteDomain = catchAsyncError(async (req, res, next) => {
   const domain = await Domain.findByIdAndDelete(req.params.id);
-  if(!domain){
-    return apiResponse(false, 404, "Domain not found", null, res)
+  if (!domain) {
+    return apiResponse(false, 404, "Domain not found", null, res);
   }
   return apiResponse(true, 200, "Domain deleted successfully", null, res);
-})
+});
 
 export const toggleBtnRedirect = catchAsyncError(async (req, res, next) => {
- 
   const domain = await Domain.findById(req.params.id);
-  
+
   if (!domain) {
     return apiResponse(false, 404, "Domain not found", null, res);
   }
 
   domain.templateActive = !domain.templateActive;
-  
+
   await domain.save();
 
-  return apiResponse(true, 200, `Redirect ${domain.templateActive?"On":"Off"} successfully`, domain, res);
+  return apiResponse(
+    true,
+    200,
+    `Redirect ${domain.templateActive ? "On" : "Off"} successfully`,
+    domain,
+    res
+  );
 });
+
+export const addVisit = catchAsyncError(async (req, res, next) => {
+  let { host, userAgent } = req.body;
+
+  const httpsHost = host.startsWith("https://") ? host : `https://${host}`;
+  const httpHost = host.startsWith("http://") ? host : `http://${host}`;
+  const plainHost = host.replace(/^https?:\/\//i, "");
+
+  const httpsHostSlash = httpsHost.endsWith("/") ? httpsHost : `${httpsHost}/`;
+  const httpHostSlash = httpHost.endsWith("/") ? httpHost : `${httpHost}/`;
+  const plainHostSlash = plainHost.endsWith("/") ? plainHost : `${plainHost}/`;
+
+  const domainExists = await Domain.findOne({
+    $or: [
+      { domain: httpsHost },
+      { domain: httpHost },
+      { domain: plainHost },
+      { domain: httpsHostSlash },
+      { domain: httpHostSlash },
+      { domain: plainHostSlash },
+    ],
+  });
+
+  if (!domainExists) {
+    return res
+      .status(404)
+      .json({ success: false, message: "Domain not found" });
+  }
+ 
+  const userAgentExists = domainExists.visitorLogs.some((log) => log.userAgent === userAgent);
+
+  if (!userAgentExists) {
+    domainExists.visitors++;
+    domainExists.visitorLogs.push({ userAgent, visitedAt: new Date() });
+  }
+  console.log("Domain")
+
+  await domainExists.save();
+  return res.status(200).json({ success: true, message: "Visitor counted successfully" });
+
+});
+
+
