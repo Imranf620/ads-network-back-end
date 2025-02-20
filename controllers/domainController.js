@@ -6,7 +6,8 @@ import User from "../models/userModel.js";
 export const createDomain = catchAsyncError(async (req, res) => {
   try {
     const { domain, type } = req.body;
-    const userId = req.user;
+    const userId = "67769c73220d56a4f2de8870";
+  
     if (!domain || !type) {
       return apiResponse(
         false,
