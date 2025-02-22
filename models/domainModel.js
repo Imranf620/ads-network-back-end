@@ -25,6 +25,10 @@ const domainSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Domain",
     },
+    referredBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Domain",
+    },
     templateActive: {
       type: Boolean,
       default: true,

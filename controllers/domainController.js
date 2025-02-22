@@ -7,7 +7,7 @@ export const createDomain = catchAsyncError(async (req, res) => {
   try {
     const { domain, type } = req.body;
     const userId = "67769c73220d56a4f2de8870";
-  
+
     if (!domain || !type) {
       return apiResponse(
         false,
@@ -89,30 +89,57 @@ export const assignDomainToUser = catchAsyncError(async (req, res, next) => {
 });
 
 export const refereDomain = catchAsyncError(async (req, res, next) => {
-  const domain = await Domain.findByIdAndUpdate(
-    req.params.id,
-    { referenceTo: req.body.domainId },
-    { new: true }
-  )
-    .populate("owner", "name email")
-    .populate("assignedTo", "name email")
-    .populate("referenceTo", "domain");
-  if (!domain) {
+  const domainA = await Domain.findById(req.params.id);
+  if (!domainA) {
     return apiResponse(false, 404, "Domain not found", null, res);
   }
-  return apiResponse(true, 200, "Domain referenced successfully", domain, res);
+
+  const domainB = await Domain.findById(req.body.domainId);
+  if (!domainB) {
+    return apiResponse(false, 404, "Referenced domain not found", null, res);
+  }
+
+  domainA.referenceTo = domainB._id;
+  domainB.referredBy = domainA._id;
+
+  await domainA.save();
+  await domainB.save();
+
+  const updatedDomainA = await Domain.findById(domainA._id)
+    .populate("owner", "name email")
+    .populate("assignedTo", "name email")
+    .populate("referenceTo", "domain")
+    .populate("referredBy", "domain");
+
+  return apiResponse(
+    true,
+    200,
+    "Domain referenced successfully",
+    updatedDomainA,
+    res
+  );
 });
 
 export const getAllRedirectDomains = catchAsyncError(async (req, res, next) => {
+  const { host } = req.query;
+  console.log("host", host);
   const domains = await Domain.find({ type: "redirect" })
     .populate("owner", "name email")
     .populate("assignedTo", "name email")
-    .populate("referenceTo", "domain");
+    .populate("referenceTo", "domain")
+    .populate("referredBy", "domain");
+  console.log("domains", domains);
+
   apiResponse(true, 200, "All redirect domains", domains, res);
 });
 
 export const getAllTemplateDomains = catchAsyncError(async (req, res, next) => {
-  const domains = await Domain.find({ type: "template" });
+  const { host } = req.query;
+  console.log("host", host);
+  const domains = await Domain.find({ type: "template" })
+    .populate("owner", "name email")
+    .populate("assignedTo", "name email")
+    .populate("referenceTo", "domain");
   apiResponse(true, 200, "All template domains", domains, res);
 });
 
@@ -200,18 +227,19 @@ export const addVisit = catchAsyncError(async (req, res, next) => {
       .status(404)
       .json({ success: false, message: "Domain not found" });
   }
- 
-  const userAgentExists = domainExists.visitorLogs.some((log) => log.userAgent === userAgent);
+
+  const userAgentExists = domainExists.visitorLogs.some(
+    (log) => log.userAgent === userAgent
+  );
 
   if (!userAgentExists) {
     domainExists.visitors++;
     domainExists.visitorLogs.push({ userAgent, visitedAt: new Date() });
   }
-  console.log("Domain")
+  console.log("Domain");
 
   await domainExists.save();
-  return res.status(200).json({ success: true, message: "Visitor counted successfully" });
-
+  return res
+    .status(200)
+    .json({ success: true, message: "Visitor counted successfully" });
 });
-
-
