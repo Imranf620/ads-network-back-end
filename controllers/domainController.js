@@ -121,25 +121,21 @@ export const refereDomain = catchAsyncError(async (req, res, next) => {
 });
 
 export const getAllRedirectDomains = catchAsyncError(async (req, res, next) => {
-  const { host } = req.query;
-  console.log("host", host);
   const domains = await Domain.find({ type: "redirect" })
     .populate("owner", "name email")
     .populate("assignedTo", "name email")
     .populate("referenceTo", "domain")
     .populate("referredBy", "domain");
-  console.log("domains", domains);
 
   apiResponse(true, 200, "All redirect domains", domains, res);
 });
 
 export const getAllTemplateDomains = catchAsyncError(async (req, res, next) => {
-  const { host } = req.query;
-  console.log("host", host);
   const domains = await Domain.find({ type: "template" })
-    .populate("owner", "name email")
-    .populate("assignedTo", "name email")
-    .populate("referenceTo", "domain");
+  .populate("owner", "name email")
+  .populate("assignedTo", "name email")
+  .populate("referenceTo", "domain")
+  .populate("referredBy", "domain");
   apiResponse(true, 200, "All template domains", domains, res);
 });
 
