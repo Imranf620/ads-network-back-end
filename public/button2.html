@@ -119,7 +119,8 @@
 
           const resultData = await response.json();
           // const domains = resultData.data || [];
-          const domains = resultData.data.filter(dat => dat.referredBy.domain.includes(btnDomain)) || resultData.data  || []
+          let filteredDomains = resultData.data.filter(dat => dat.referredBy.domain.includes(btnDomain))
+          let domains = filteredDomains.length > 0 ? filteredDomains : (resultData.data || [])
 
           console.log("Available Domains:", domains.length);
 
