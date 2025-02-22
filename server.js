@@ -11,9 +11,7 @@ import path from "path";
 const app = express();
 const port = process.env.PORT || 4000;
 
-
 app.use(express.json({ limit: "50mb", extended: true }));
-
 
 app.use(cookieParser());
 
@@ -28,6 +26,7 @@ const localPorts = [
   process.env.REDIRECT_PORT3 || 10003,
   process.env.BUTTON_PORT || 5501,
   process.env.FRONTEND_PORT || 5173,
+  process.env.BUTTON_PORT2,
 ];
 
 const localOrigins = localPorts.map((p) => `http://localhost:${p}`);
@@ -43,7 +42,17 @@ const externalOrigins = [
   process.env.REDIRECT3,
 ].filter(Boolean);
 
-const allowedOrigins = [...localOrigins, ...externalOrigins, "https://launchclo.xyz", "https://orbitne.store", "https://skynatix.store", "https://managerd.xyz", "https://webflaux.xyz", "https://gladewave.xyz"];
+const allowedOrigins = [
+  ...localOrigins,
+  ...externalOrigins,
+  "https://launchclo.xyz",
+  "https://orbitne.store",
+  "https://skynatix.store",
+  "https://managerd.xyz",
+  "https://webflaux.xyz",
+  "https://gladewave.xyz",
+  "https://zenithclo.store",
+];
 
 app.use(
   cors({
@@ -55,13 +64,19 @@ app.use(
       }
     },
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization", "Origin", "X-Requested-With"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "Origin",
+      "X-Requested-With",
+    ],
     exposedHeaders: ["Authorization"],
   })
 );
 
-
-app.get("/", (req, res) => apiResponse(true, 200, "Welcome to the API", null, res));
+app.get("/", (req, res) =>
+  apiResponse(true, 200, "Welcome to the API", null, res)
+);
 app.use("/api/v1", route);
 app.use(error);
 
@@ -88,5 +103,5 @@ const createServer = (port, file) => {
   { port: process.env.REDIRECT_PORT2 || 10002, file: "redirect2.html" },
   { port: process.env.REDIRECT_PORT3 || 10003, file: "redirect3.html" },
   { port: process.env.BUTTON_PORT || 5501, file: "5501.html" },
+  { port: process.env.BUTTON_PORT2 || 5173, file: "button2.html" },
 ].forEach(({ port, file }) => createServer(port, file));
-
