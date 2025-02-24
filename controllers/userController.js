@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import getJwtToken from "../utils/getJwtToken.js";
 import crypto from "crypto";
 import Domain from "../models/domainModel.js";
+import mongoose from "mongoose";
 
 export const register = catchAsyncError(async (req, res) => {
   const { name, email, password, accountType, accountId, role } = req.body;
@@ -292,6 +293,7 @@ export const addAClick = catchAsyncError(async (req, res, next) => {
 export const getClickStats = catchAsyncError(async (req, res) => {
   try {
     const { domainId, startDate, endDate } = req.query;
+    console.log("domainId: " + domainId)
 
     // Convert to Date objects for comparisons
     const today = new Date();
@@ -304,9 +306,9 @@ export const getClickStats = catchAsyncError(async (req, res) => {
     let matchFilter = {};
 
     if (domainId) {
-      matchFilter["allRequestsForAd.assignedDomain"] = domainId;
+      matchFilter["allRequestsForAd.assignedDomain"] = new mongoose.Types.ObjectId(domainId);
     }
-
+    
     if (startDate && endDate) {
       matchFilter["allRequestsForAd.clickedFingerprints.clickedAt"] = {
         $gte: new Date(startDate),
@@ -357,11 +359,13 @@ export const getClickStats = catchAsyncError(async (req, res) => {
       {
         $lookup: {
           from: "domains",
-          localField: "_id",
-          foreignField: "_id",
+          let: { domainId: { $toObjectId: "$_id" } },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$_id", "$$domainId"] } } }
+          ],
           as: "domainDetails",
-        },
-      },
+        }
+      },      
       {
         $project: {
           _id: 0,
